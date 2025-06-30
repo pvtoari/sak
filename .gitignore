@@ -1,0 +1,6 @@
+gcc-cross-compiler/*
+!gcc-cross-compiler/src
+!*.sh
+*.o
+*.bin
+*.iso
