@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "vga.h"
+#include "vector.h"
 #include "utils.h"
 #include "pepe.h"
 
@@ -109,10 +110,76 @@ void terminal_clear(void) {
     terminal_column = 0;
 }
 
-void kernel_main(void) 
-{
+void show_vector_status(vector* v, const char* name) {
+    char buffer[64];
+    
+    terminal_writestring("Vector '");
+    terminal_writestring(name);
+    terminal_writestring("': ");
+    
+    itoa(v->size(v), buffer, 10);
+    terminal_writestring("Size=");
+    terminal_writestring(buffer);
+    
+    terminal_writestring(", Cap=");
+    itoa(v->vectorList.capacity, buffer, 10);
+    terminal_writestring(buffer);
+    
+    terminal_writestring(", Items=[");
+    for(int i = 0; i < v->size(v); i++) {
+        if(i > 0) terminal_writestring(", ");
+        itoa((uint32_t)v->get(v, i), buffer, 10);
+        terminal_writestring(buffer);
+    }
+    
+    terminal_writestring("]");
+    terminal_putchar('\n');
+}
+
+void vector_test() {
+	uint32_t sleep_amount = 100000;
+    vector v;
+    vector_init(&v);
+    
+    terminal_writestring("\nStarting vector tests...\n\n");
+    sleep(sleep_amount);
+    
+    terminal_writestring("Adding 10 elements...\n");
+    for(uint32_t i = 0; i < 10; i++) {
+        v.add(&v, (void*)(i + 1));
+        show_vector_status(&v, "test");
+        sleep(sleep_amount);
+    }
+
+    terminal_writestring("\nModifying element at index 5 -> 99...\n");
+    sleep(sleep_amount);
+    v.set(&v, 5, (void*) 99);
+    show_vector_status(&v, "test");
+    sleep(sleep_amount);
+    
+    terminal_writestring("\nErasing 5 elements...\n");
+    sleep(sleep_amount);
+    for(int i = 0; i < 5; i++) {
+        v.delete(&v, 0);
+        show_vector_status(&v, "test");
+        sleep(sleep_amount);
+    }
+    
+    terminal_writestring("\nResizing to size 20...\n");
+    sleep(sleep_amount);
+    v.resize(&v, 20);
+    show_vector_status(&v, "test");
+    sleep(sleep_amount);
+    
+    terminal_writestring("\nCompleted tests!\n");
+}
+
+void kernel_main(void) {
 	terminal_initialize();
 
+	vector_test();
+	sleep(10000000);
+	
 	uint32_t length = 10;
 	uint32_t arr[length];
 	iota(arr, length);
