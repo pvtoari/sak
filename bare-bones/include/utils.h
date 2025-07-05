@@ -1,3 +1,6 @@
+#ifndef UTILS_H
+#define UTILS_H
+
 #include <stdint.h>
 #include <stddef.h>
 
@@ -45,3 +48,4 @@ void itoa(uint32_t num, char* buffer, int buffer_size) {
     
     buffer[i] = '\0';
 }
+#endif // UTILS_H

@@ -1,3 +1,6 @@
+#ifndef VECTOR_H
+#define VECTOR_H
+
 #include <stddef.h>
 #include <stdbool.h>
 #include "mem.h"
@@ -103,3 +106,5 @@ void vector_init(vector* v) {
     v->delete = _delete;
     //v->free = _free;
 }
+
+#endif // VECTOR_H

@@ -1,3 +1,6 @@
+#ifndef MEM_H
+#define MEM_H
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -54,3 +57,5 @@ void* realloc(void* ptr, size_t size) {
     
     return new_ptr;
 }
+
+#endif // MEM_H

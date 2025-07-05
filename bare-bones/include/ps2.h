@@ -1,3 +1,6 @@
+#ifndef PS2_H
+#define PS2_H
+
 #include <stdint.h>
 #include "ioports.h"
 
@@ -45,4 +48,4 @@ static inline uint8_t ps2_parity_error() {
 	PS/2 Controller Commands
 */
 
-// TODO
+// TODO#endif // PS2_H
