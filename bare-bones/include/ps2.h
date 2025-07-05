@@ -4,48 +4,363 @@
 #include <stdint.h>
 #include "ioports.h"
 
-#define PS2_DATA_PORT 0x60
-#define PS2_STATUS_REGISTER 0x64
-#define PS2_COMMAND_REGISTER 0x64
+/*
+	PS/2 Serial ports
+*/
+
+#define PS2_DATA_PORT 			0x60
+#define PS2_STATUS_REGISTER 	0x64
+#define PS2_COMMAND_REGISTER	0x64
 
 /*
-	PS/2 Status Register queries
+	PS/2 Response bytes
+*/
+
+#define PS2_RESPONSE_ERROR 				0x00
+#define PS2_RESPONSE_SELF_TEST_PASSED 	0xAA
+#define PS2_RESPONSE_ECHO 				0xEE
+#define PS2_RESPONSE_ACK 				0xFA
+#define PS2_RESPONSE_SELF_TEST_FAILED 	0xFC
+#define PS2_RESPONSE_SELF_TEST_FAILED_2	0xFD
+#define PS2_RESPONSE_RESEND 			0xFE
+#define PS2_RESPONSE_ERROR_2 			0xFF
+#define PS2_RESPONSE_SCAN_CODE_SET_1 	0x43
+#define PS2_RESPONSE_SCAN_CODE_SET_2 	0x41
+#define PS2_RESPONSE_SCAN_CODE_SET_3 	0x3F
+
+/*
+	PS/2 Status Register query functions
 */
 
 static inline uint8_t ps2_output_buffer_status() {
-	return inb(PS2_DATA_PORT) & 1;
+	return inb(PS2_STATUS_REGISTER) & 1;
 }
 
 static inline uint8_t ps2_input_buffer_status() {
-	return inb(PS2_DATA_PORT) & 2;
+	return inb(PS2_STATUS_REGISTER) & 2;
 }
 
 static inline uint8_t ps2_system_flag() {
-	return inb(PS2_DATA_PORT) & 4;
+	return inb(PS2_STATUS_REGISTER) & 4;
 }
 
 static inline uint8_t ps2_command_or_data() {
-	return inb(PS2_DATA_PORT) & 8;
+	return inb(PS2_STATUS_REGISTER) & 8;
 }
 
 static inline uint8_t ps2_chipset_specific() {
-	return inb(PS2_DATA_PORT) & 16;
+	return inb(PS2_STATUS_REGISTER) & 16;
 }
 
 static inline uint8_t ps2_chipset_specific_2() {
-	return inb(PS2_DATA_PORT) & 32;
+	return inb(PS2_STATUS_REGISTER) & 32;
 }
 
 static inline uint8_t ps2_timeout_error() {
-	return inb(PS2_DATA_PORT) & 64;
+	return inb(PS2_STATUS_REGISTER) & 64;
 }
 
 static inline uint8_t ps2_parity_error() {
-	return inb(PS2_DATA_PORT) & 128;
+	return inb(PS2_STATUS_REGISTER) & 128;
 }
 
 /*
 	PS/2 Controller Commands
 */
 
-// TODO#endif // PS2_H
+#define PS2_COMMAND_READ_BYTE_ZERO_FROM_RAM					0x20
+#define PS2_COMMAND_WRITE_NEXT_TO_BYTE_ZERO_FROM_RAM		0x20
+#define PS2_COMMAND_DISABLE_SECOND_PORT						0xA7
+#define PS2_COMMAND_ENABLE_SECOND_PORT						0xA8
+#define PS2_COMMAND_TEST_SECOND_PORT						0xA9
+#define PS2_COMMAND_TEST_CONTROLLER							0xAA
+#define PS2_COMMAND_TEST_FIRST_PORT							0xAB
+#define PS2_COMMAND_TEST_DIAGNOSTIC_DUMP					0xAC
+#define PS2_COMMAND_DISABLE_FIRST_PORT						0xAD
+#define PS2_COMMAND_ENABLE_FIRST_PORT						0xAE
+#define PS2_COMMAND_READ_CONTROLLER_INPUT_PORT				0xC0
+#define PS2_COMMAND_READ_CONTROLLER_OUTPUT_PORT				0xD0
+#define PS2_COMMAND_WRITE_BYTE_TO_CONTROLLER_OUTPUT_PORT	0xD1
+#define PS2_COMMAND_WRITE_BYTE_TO_FIRST_PORT_OUTPUT_BUFFER	0xD2
+#define PS2_COMMAND_WRITE_BYTE_TO_SECOND_PORT_OUTPUT_BUFFER	0xD3
+#define PS2_COMMAND_WRITE_BYTE_TO_SECOND_PORT_INPUT_BUFFER	0xD4
+#define PS2_COMMAND_SET_LEDS 								0xED
+#define PS2_COMMAND_ECHO 									0xEE
+#define PS2_COMMAND_GET_CURRENT_SCAN_CODE_SET 				0xF0
+#define PS2_COMMAND_SET_CURRENT_SCAN_CODE_SET				0xF0
+#define PS2_COMMAND_IDENTIFY_KEYBOARD 						0xF2
+#define PS2_COMMAND_SET_TYPEMATIC_RATE_DELAY				0xF3
+#define PS2_COMMAND_ENABLE_SCANNING 						0xF4
+#define PS2_COMMAND_DISABLE_SCANNING 						0xF5
+#define PS2_COMMAND_SET_DEFAULT_PARAMETERS 					0xF6
+#define PS2_COMMAND_RESEND_LAST_BYTE 						0xFE
+#define PS2_COMMAND_RESET_AND_SELFTEST 						0xFF
+
+/*
+	PS/2 Controller Subcommands
+*/
+
+#define PS2_SUBCOMMAND_SCROLL_LOCK_LED 				0x01
+#define PS2_SUBCOMMAND_NUMBER_LOCK_LED			 	0x02
+#define PS2_SUBCOMMAND_CAPS_LOCK_LED		 		0x04
+#define PS2_SUBCOMMAND_SET_CURRENT_SCAN_CODE_SET_1	0x01
+#define PS2_SUBCOMMAND_SET_CURRENT_SCAN_CODE_SET_2	0x02
+#define PS2_SUBCOMMAND_SET_CURRENT_SCAN_CODE_SET_3	0x03
+
+/*
+	PS2 Command functions
+*/
+
+static inline void ps2_send_controller_command(uint8_t command) {
+    while (ps2_input_buffer_status());
+    outb(PS2_COMMAND_REGISTER, command);
+}
+
+static inline void ps2_send_first_port_command(uint8_t command) {
+    while (ps2_input_buffer_status());
+    outb(PS2_DATA_PORT, command);
+}
+
+static inline void ps2_send_second_port_command(uint8_t command) {
+    ps2_send_controller_command(PS2_COMMAND_WRITE_BYTE_TO_SECOND_PORT_INPUT_BUFFER);
+    
+    while (ps2_input_buffer_status());
+    outb(PS2_DATA_PORT, command);
+}
+
+static inline uint8_t ps2_get_data_byte() {
+	return inb(PS2_DATA_PORT);
+}
+
+static inline uint8_t _read_scan_code() {
+    while (!ps2_output_buffer_status());
+    
+    return ps2_get_data_byte();
+}
+
+uint8_t ps2_keyboard_init() {
+    int retries = 3;
+
+reset:
+    ps2_send_first_port_command(PS2_COMMAND_RESET_AND_SELFTEST);
+    while (!ps2_output_buffer_status());
+    
+    uint8_t res = ps2_get_data_byte();
+    if (res == PS2_RESPONSE_RESEND && --retries > 0) goto reset;
+    if (res != PS2_RESPONSE_ACK) return 1;
+    
+    while (!ps2_output_buffer_status());
+    if (ps2_get_data_byte() != PS2_RESPONSE_SELF_TEST_PASSED) return 2;
+
+	while (ps2_input_buffer_status());
+	ps2_send_first_port_command(PS2_COMMAND_SET_DEFAULT_PARAMETERS);
+	while (!ps2_output_buffer_status());
+	if (ps2_get_data_byte() != PS2_RESPONSE_ACK) return 3;
+
+    ps2_send_first_port_command(PS2_COMMAND_ENABLE_SCANNING);
+    while (!ps2_output_buffer_status());
+    if (ps2_get_data_byte() != PS2_RESPONSE_ACK) return 4;
+
+    return 0;
+}
+
+uint8_t ps2_read_scan_code(bool *released, bool *extended) {
+    static bool got_f0 = false;
+    static bool got_e0 = false;
+
+    while (true) {
+        uint8_t sc = _read_scan_code();
+
+        if (sc == 0xF0) {
+            got_f0 = true;
+            continue;
+        }
+
+        if (sc == 0xE0) {
+            got_e0 = true;
+            continue;
+        }
+
+        *released = got_f0;
+        *extended = got_e0;
+
+        got_f0 = false;
+        got_e0 = false;
+
+        return sc;
+    }
+}
+
+/*
+	PS/2 Scan Code Set 2 charmap for US QWERTY
+*/
+
+static const unsigned char _unshifted2[256] = {
+    [0x02] = '1',
+    [0x03] = '2',
+    [0x04] = '3',
+    [0x05] = '4',
+    [0x06] = '5',
+    [0x07] = '6',
+    [0x08] = '7',
+    [0x09] = '8',
+    [0x0A] = '9',
+    [0x0B] = '0',
+    [0x0C] = '-',
+    [0x0D] = '=',
+    [0x0E] = '\b', // BACKSPACE
+    [0x0F] = '\t', // TAB
+    [0x10] = 'q',
+    [0x11] = 'w',
+    [0x12] = 'e',
+    [0x13] = 'r',
+    [0x14] = 't',
+    [0x15] = 'y',
+    [0x16] = 'u',
+    [0x17] = 'i',
+    [0x18] = 'o',
+    [0x19] = 'p',
+    [0x1A] = '[',
+    [0x1B] = ']',
+    [0x1C] = '\n', // ENTER
+    [0x1D] = '\0', // LEFTCTRL | RIGHTCTRL
+    [0x1E] = 'a',
+    [0x1F] = 's',
+    [0x20] = 'd',
+    [0x21] = 'f',
+    [0x22] = 'g',
+    [0x23] = 'h',
+    [0x24] = 'j',
+    [0x25] = 'k',
+    [0x26] = 'l',
+    [0x27] = ';',
+    [0x28] = '\'',
+    [0x29] = '`',
+    [0x2A] = '\0', // LEFTSHIFT
+    [0x2B] = '\\',
+    [0x2C] = 'z',
+    [0x2D] = 'x',
+    [0x2E] = 'c',
+    [0x2F] = 'v',
+    [0x30] = 'b',
+    [0x31] = 'n',
+    [0x32] = 'm',
+    [0x33] = ',',
+    [0x34] = '.',
+    [0x35] = '/',
+    [0x36] = '\0', // RIGHTSHIFT
+    [0x38] = '\0', // LEFT ALT
+    [0x39] = ' ', // SPACE
+    [0x3A] = '\0', // CAPSLOCK
+    [0x3B] = '\0', // F1
+    [0x3C] = '\0', // F2
+    [0x3D] = '\0', // F3
+    [0x3E] = '\0', // F4
+    [0x3F] = '\0', // F5
+    [0x40] = '\0', // F6
+    [0x41] = '\0', // F7
+    [0x42] = '\0', // F8
+    [0x43] = '\0', // F9
+    [0x44] = '\0', // F10
+    [0x46] = '\0', // SCROLLLOCK
+    [0x57] = '\0', // F11
+    [0x58] = '\0', // F12
+    
+};
+
+static const unsigned char _shifted2[256] = {
+    [0x02] = '1',
+    [0x03] = '2',
+    [0x04] = '3',
+    [0x05] = '4',
+    [0x06] = '5',
+    [0x07] = '6',
+    [0x08] = '7',
+    [0x09] = '8',
+    [0x0A] = '9',
+    [0x0B] = '0',
+    [0x0C] = '-',
+    [0x0D] = '=',
+    [0x0E] = '\b', // BACKSPACE
+    [0x0F] = '\t', // TAB
+    [0x10] = 'q',
+    [0x11] = 'w',
+    [0x12] = 'e',
+    [0x13] = 'r',
+    [0x14] = 't',
+    [0x15] = 'y',
+    [0x16] = 'u',
+    [0x17] = 'i',
+    [0x18] = 'o',
+    [0x19] = 'p',
+    [0x1A] = '[',
+    [0x1B] = ']',
+    [0x1C] = '\n', // ENTER
+    [0x1D] = '\0', // LEFTCTRL | RIGHTCTRL
+    [0x1E] = 'a',
+    [0x1F] = 's',
+    [0x20] = 'd',
+    [0x21] = 'f',
+    [0x22] = 'g',
+    [0x23] = 'h',
+    [0x24] = 'j',
+    [0x25] = 'k',
+    [0x26] = 'l',
+    [0x27] = ';',
+    [0x28] = '\'',
+    [0x29] = '`',
+    [0x2A] = '\0', // LEFTSHIFT
+    [0x2B] = '\\',
+    [0x2C] = 'z',
+    [0x2D] = 'x',
+    [0x2E] = 'c',
+    [0x2F] = 'v',
+    [0x30] = 'b',
+    [0x31] = 'n',
+    [0x32] = 'm',
+    [0x33] = ',',
+    [0x34] = '.',
+    [0x35] = '/',
+    [0x36] = '\0', // RIGHTSHIFT
+    [0x38] = '\0', // LEFT ALT
+    [0x39] = ' ', // SPACE
+    [0x3A] = '\0', // CAPSLOCK
+    [0x3B] = '\0', // F1
+    [0x3C] = '\0', // F2
+    [0x3D] = '\0', // F3
+    [0x3E] = '\0', // F4
+    [0x3F] = '\0', // F5
+    [0x40] = '\0', // F6
+    [0x41] = '\0', // F7
+    [0x42] = '\0', // F8
+    [0x43] = '\0', // F9
+    [0x44] = '\0', // F10
+    [0x46] = '\0', // SCROLLLOCK
+    [0x57] = '\0', // F11
+    [0x58] = '\0', // F12
+    
+};
+
+/*
+	PS2 Scancode util functions
+*/
+
+unsigned char ps2_scan_code_to_char(unsigned char scan_code, bool shift) {
+	return shift ? _shifted2[scan_code] : _unshifted2[scan_code];
+}
+
+uint8_t ps2_keyboard_set_scan_code_set(uint8_t set) {
+	while (ps2_input_buffer_status());
+	ps2_send_first_port_command(PS2_COMMAND_SET_CURRENT_SCAN_CODE_SET);
+	while (!ps2_output_buffer_status());
+	if (ps2_get_data_byte() != PS2_RESPONSE_ACK) return 1;
+
+	while (ps2_input_buffer_status());
+	ps2_send_first_port_command(set);
+	while (!ps2_output_buffer_status());
+	if (ps2_get_data_byte() != PS2_RESPONSE_ACK) return 2;
+
+	return 0;
+}
+
+#endif // PS2_H
