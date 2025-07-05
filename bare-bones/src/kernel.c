@@ -26,20 +26,6 @@
         }
 
 
-void vector_test() {
-	uint32_t sleep_amount = 100000;
-    vector v;
-    vector_init(&v);
-    
-    terminal_writestring("\nStarting vector tests...\n\n");
-    sleep(sleep_amount);
-    
-    terminal_writestring("Adding 10 elements...\n");
-    for(uint32_t i = 0; i < 10; i++) {
-        v.add(&v, (void*)(i + 1));
-        show_vector_status(&v, "test");
-        sleep(sleep_amount);
-    }
 
     }
 }
