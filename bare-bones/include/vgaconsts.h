@@ -1,3 +1,5 @@
+#ifndef VGACONSTS_H
+
 #include <stdint.h>
 
 /* Hardware text mode color constants. */
@@ -30,3 +32,5 @@ static inline uint16_t vga_entry(unsigned char uc, uint8_t color)
 {
 	return (uint16_t) uc | (uint16_t) color << 8;
 }
+
+#endif // VGACONSTS_H
