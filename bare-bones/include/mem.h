@@ -22,6 +22,10 @@ void* memcpy(void* dest, const void *src, size_t n) {
     return dest;
 }
 
+void *memset(void *dest, int c, size_t n) {
+    for (char *p = dest; p != dest + n; ++p) *p = c;
+}
+
 static size_t align_up(size_t size) {
     return (size + ALIGNMENT - 1) & ~(ALIGNMENT - 1);
 }
@@ -56,6 +60,11 @@ void* realloc(void* ptr, size_t size) {
     memcpy(new_ptr, ptr, copy_size);
     
     return new_ptr;
+}
+
+void free(void* ptr) {
+    (void) ptr;
+    return;
 }
 
 #endif // MEM_H
