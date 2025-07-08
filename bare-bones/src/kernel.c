@@ -6,45 +6,33 @@
 #include "utils.h"
 #include "pepe.h"
 #include "ps2.h"
-#include "multiboot.h"
+#include "multiboot2.h"
 #include "fbout.h"
 
-/* Check if the compiler thinks you are targeting the wrong operating system. */
-#if defined(__linux__)
-#error "You are not using a cross-compiler, you will most certainly run into trouble"
-#endif
 
-/* This tutorial will only work for the 32-bit ix86 targets. */
 #if !defined(__i386__)
-#error "This tutorial needs to be compiled with a ix86-elf compiler"
+#error "This needs to be compiled with a ix86-elf compiler"
 #endif
 
-#define MULTIBOOT_HEADER_FLAGS (MULTIBOOT_PAGE_ALIGN | MULTIBOOT_MEMORY_INFO | MULTIBOOT_VIDEO_MODE | MULTIBOOT_AOUT_KLUDGE)
+#define FOREACHTAG(tag, addr) for(struct multiboot_tag *tag = (struct multiboot_tag *)((uint8_t *)(addr) + 8); tag->type != MULTIBOOT_TAG_TYPE_END; tag = (struct multiboot_tag *)((uint8_t *)(tag) + ((tag->size + 7) & ~7)))
 
 void kernel_main(multiboot_info_t* mbd, uint32_t magic) {
+void kernel_main(uint32_t multiboot_addr, uint32_t magic) {
     vga_init();
 
     if(magic != MULTIBOOT_BOOTLOADER_MAGIC) {
+    unsigned size = *(unsigned *) multiboot_addr;
+
+    if(magic != MULTIBOOT2_BOOTLOADER_MAGIC) {
         vga_printf("Panic! MAGIC=0x%x", magic);
         while(true);
     }
 
-    bool graphics_mode = mbd->flags & MULTIBOOT_HEADER_FLAGS;
-    if(graphics_mode) {
+    if(multiboot_addr & 7) {
+        vga_printf("Unaligned mbi: 0x%x\n", multiboot_addr);
+        while(true);
+    }
         // GRAPHICS MODE
-        uint32_t width = mbd->framebuffer_width;
-        uint32_t height = mbd->framebuffer_height;
-        uint8_t bpp = mbd->framebuffer_bpp;
-        uint32_t pitch = mbd->framebuffer_pitch;
-        uint32_t *addr = (uint32_t *) mbd->framebuffer_addr;
-
-        framebuffer fb;
-        fb.width = width;
-        fb.height = height;
-        fb.bpp = bpp;
-        fb.pitch = pitch;
-        fb.addr = addr;
-        
         uint8_t res = ps2_keyboard_init();
         if(res != 0) {
             fb_printf(&fb, "Something went wrong while initializing the PS/2 keyboard\n");
@@ -90,11 +78,11 @@ void kernel_main(multiboot_info_t* mbd, uint32_t magic) {
         }
     } else {
         // VGA TEXT MODE
-        uint32_t width = mbd->framebuffer_width;
-        uint32_t height = mbd->framebuffer_height;
-        uint8_t bpp = mbd->framebuffer_bpp;
-        vga_printf("Resolution: %dx%d\n", width, height);
-        vga_printf("BPP: %d\n", bpp);
+        //uint32_t width = mbd->framebuffer_width;
+        //uint32_t height = mbd->framebuffer_height;
+        //uint8_t bpp = mbd->framebuffer_bpp;
+        //vga_printf("Resolution: %dx%d\n", width, height);
+        //vga_printf("BPP: %d\n", bpp);
         vga_printf("No framebuffer available, using VGA text mode\n");
 
         vga_clear();

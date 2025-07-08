@@ -1,34 +1,33 @@
-/* Declare constants for the multiboot header. */
-.set ALIGN,    1<<0             /* align loaded modules on page boundaries */
-.set MEMINFO,  1<<1             /* provide memory map */
-.set VIDEO_MODE, 1<<2           /* request video mode */
-.set FLAGS,    ALIGN | MEMINFO | VIDEO_MODE
-.set MAGIC,    0x1BADB002       /* magic number */
-.set CHECKSUM, -(MAGIC + FLAGS)  /* checksum */
+/* Declare constants for the multiboot2 header. */
+#.set FLAGS,    ALIGN | MEMINFO | VIDEO_MODE
+.set MAGIC,    0xE85250D6       /* magic number */
+.set ARCHITECTURE,	0       /* 32 bit protected mode */
+.set HEADER_LENGTH, header_end - header_start
+.set CHECKSUM, -(MAGIC + HEADER_LENGTH)  /* checksum */
 
-/* 
-Declare a multiboot header that marks the program as a kernel. These are magic
-values that are documented in the multiboot standard. The bootloader will
-search for this signature in the first 8 KiB of the kernel file, aligned at a
-32-bit boundary. The signature is in its own section so the header can be
-forced to be within the first 8 KiB of the kernel file.
-*/
-.section .multiboot
-.align 4
+# multiboot2 magic weeeeeee now we using tags hell yeah
+.section .multiboot2
+.align 8
 .long MAGIC
-.long FLAGS
+.long ARCHITECTURE
+.long HEADER_LENGTH
 .long CHECKSUM
-# AOUT_KLUDGE 
-.long 0    /* header_addr */
-.long 0    /* load_addr */
-.long 0    /* load_end_addr */
-.long 0    /* bss_end_addr */
-.long 0    /* entry_addr */
-# VIDEO MODE
-.long 0   /* mode_type
-.long 1024 /* width */
-.long 768  /* height */
-.long 32   /* depth (32 bpp) */
+
+header_start:
+
+.word 5 # type = 5
+.word 0 # no flags
+.word 20 # size = 20
+.word 1024 # width
+.word 768 # height
+.word 32 # depth
+
+# end tag
+.word 0 # type = 0
+.word 0 # no flags
+.word 8 # size = 8
+
+header_end:
 
 /*
 The multiboot standard does not define the value of the stack pointer register
@@ -42,6 +41,7 @@ System V ABI standard and de-facto extensions. The compiler will assume the
 stack is properly aligned and failure to align the stack will result in
 undefined behavior.
 */
+
 .section .bss
 .align 16
 stack_bottom:
@@ -59,7 +59,7 @@ _start:
 
 	/*
 	a GDT will be born here
-	*/
+	*/		
 	
 	# Bootloader leaves magic and multiboot headers at eax and eab, push them so we can grab them at C
 
