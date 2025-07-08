@@ -2,7 +2,7 @@
 #define PS2_H
 
 #include <stdint.h>
-#include "ioports.h"
+#include "sys/ioports.h"
 
 /*
 	PS/2 Serial ports

@@ -1,15 +1,15 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include "vgaio.h"
-#include "vector.h"
-#include "utils.h"
-#include "pepe.h"
-#include "ps2.h"
-#include "multiboot2.h"
-#include "fbout.h"
-#include "acpi.h"
-#include "chudjackr.h"
+#include "graphics/vga.h"
+#include "graphics/framebuffer.h"
+#include "std/utils.h"
+#include "sys/ps2.h"
+#include "sys/multiboot2.h"
+#include "sys/acpi.h"
+#include "math/vector.h"
+#include "raw/pepe.h"
+#include "raw/chudjackr.h"
 
 #define STBI_NO_STDIO
 #define STBI_NO_HDR

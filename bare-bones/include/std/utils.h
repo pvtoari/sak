@@ -12,28 +12,11 @@ void sleep(uint32_t ticks) {
     }
 }
 
-size_t strlen(const char* str) 
-{
-	size_t len = 0;
-	while (str[len])
-		len++;
-	return len;
-}
-
-int strcmp(const char* s1, const char* s2) {
-    while(*s1 && (*s1 == *s2))
-    {
-        s1++;
-        s2++;
-    }
-    return *(const unsigned char*)s1 - *(const unsigned char*)s2;
-}
-
-void iota(uint32_t* arr, uint32_t length) {
+void iota(uint32_t *arr, uint32_t length) {
 	for (uint32_t i = 0; i < length; i++) arr[i] = i;
 }
 
-void itoa(uint32_t num, char* buffer, int buffer_size) {
+void itoa(uint32_t num, char *buffer, int buffer_size) {
     if (buffer_size < 2) return;
     
     int i = 0;
@@ -56,24 +39,6 @@ void itoa(uint32_t num, char* buffer, int buffer_size) {
     }
     
     buffer[i] = '\0';
-}
-
-char *convert(unsigned int num, int base)
-{
-    static char Representation[]= "0123456789ABCDEF";
-    static char buffer[50];
-    char *ptr;
-
-    ptr = &buffer[49];
-    *ptr = '\0';
-
-    do
-    {
-        *--ptr = Representation[num%base];
-        num /= base;
-    }while(num != 0);
-
-    return(ptr);
 }
 
 #endif // UTILS_H

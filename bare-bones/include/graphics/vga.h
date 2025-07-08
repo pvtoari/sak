@@ -1,14 +1,15 @@
-#ifndef VGAIO_H
-#define VGAIO_H
+#ifndef VGA_H
+#define VGA_H
 
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdarg.h>
 #include "vgaconsts.h"
-#include "utils.h"
-#include "mem.h"
-#include "math.h"
+#include "std/string.h"
+#include "std/utils.h"
+#include "std/mem.h"
+#include "math/math.h"
 
 #define VGA_WIDTH	80
 #define VGA_HEIGHT  25
@@ -17,7 +18,7 @@
 size_t vga_row;
 size_t vga_column;
 uint8_t vga_current_color;
-uint16_t *vga_buffer = (uint16_t *)VGA_MEMORY;
+uint16_t *vga_buffer = (uint16_t *) VGA_MEMORY;
 
 void vga_init(void) 
 {
@@ -100,7 +101,7 @@ void vga_write_char(char c) {
 	if (vga_row == VGA_HEIGHT) vga_scroll();
 }
 
-void vga_printf(const char* format, ...) {
+void vga_printf(const char *format, ...) {
 	char *buf;
 	int i;
 	va_list args;
@@ -152,7 +153,7 @@ void vga_putchar(char c) {
 	vga_printf("%c", c);
 }
 
-void vga_write(const char* data, size_t size) {
+void vga_write(const char *data, size_t size) {
 	char buffer[size + 1];
 	memcpy(buffer, data, size);
 	buffer[size] = '\0';
@@ -160,8 +161,8 @@ void vga_write(const char* data, size_t size) {
 	vga_printf("%s", buffer);
 }
 
-void vga_writestring(const char* data) {
+void vga_writestring(const char *data) {
 	vga_printf("%s", data);
 }
 
-#endif // VGAIO_H
+#endif // VGA_H

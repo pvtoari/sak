@@ -1,15 +1,15 @@
-#include <stdint.h>
-#include <stddef.h>
-
 #ifndef ACPI_H
 #define ACPI_H
 
+#include <stdint.h>
+#include <stddef.h>
+
 typedef struct RSDP_t {
- char signature[8];
- uint8_t checksum;
- char oem_id[6];
- uint8_t revision;
- uint32_t rsdt_address;
+    char signature[8];
+    uint8_t checksum;
+    char oem_id[6];
+    uint8_t revision;
+    uint32_t rsdt_address;
 } __attribute__ ((packed)) RSDP_t;
 
 typedef struct XSDP_t {
@@ -26,15 +26,15 @@ typedef struct XSDP_t {
 } __attribute__ ((packed)) XSDP_t;
 
 typedef struct ACPISDTHeader_t {
-  char Signature[4];
-  uint32_t Length;
-  uint8_t Revision;
-  uint8_t Checksum;
-  char OEMID[6];
-  char OEMTableID[8];
-  uint32_t OEMRevision;
-  uint32_t CreatorID;
-  uint32_t CreatorRevision;
+    char Signature[4];
+    uint32_t Length;
+    uint8_t Revision;
+    uint8_t Checksum;
+    char OEMID[6];
+    char OEMTableID[8];
+    uint32_t OEMRevision;
+    uint32_t CreatorID;
+    uint32_t CreatorRevision;
 } ACPISDTHeader_t;
 
 typedef struct RSDT_t {
@@ -42,9 +42,9 @@ typedef struct RSDT_t {
     uint32_t PointerToOtherSDT[]; // PointerToOtherSDT[(h.Length - sizeof(h)) / 4];
 } RSDT_t;
 
-struct XSDT_t {
-  struct ACPISDTHeader_t h;
-  uint64_t PointerToOtherSDT[]; // PointerToOtherSDT[(h.Length - sizeof(h)) / 8];
+typedef struct XSDT_t {
+    struct ACPISDTHeader_t h;
+    uint64_t PointerToOtherSDT[]; // PointerToOtherSDT[(h.Length - sizeof(h)) / 8];
 } XSDT_t;
 
 static inline size_t rsdt_pointer_size(const struct ACPISDTHeader_t *h) {
@@ -55,13 +55,12 @@ static inline size_t xsdt_pointer_size(const struct ACPISDTHeader_t *h) {
     return (h->Length - sizeof(*h)) / 8;
 }
 
-typedef struct GenericAddressStructure_t
-{
-  uint8_t AddressSpace;
-  uint8_t BitWidth;
-  uint8_t BitOffset;
-  uint8_t AccessSize;
-  uint64_t Address;
+typedef struct GenericAddressStructure_t {
+    uint8_t AddressSpace;
+    uint8_t BitWidth;
+    uint8_t BitOffset;
+    uint8_t AccessSize;
+    uint64_t Address;
 } GenericAddressStructure_t;
 
 typedef struct FADT_t

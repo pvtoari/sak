@@ -1,15 +1,16 @@
+#ifndef FRAMEBUFFER_H
+#define FRAMEBUFFER_H
+
 #include <stdint.h>
 #include <stddef.h>
 #include <stdarg.h>
-//#include "anniki8x8.h"
-#include "anniki16x16.h"
-#include "mem.h"
-#include "utils.h"
-#include "math.h"
-#include "colors.h"
-
-#ifndef FBOUT_H
-#define FBOUT_H
+//#include "psf/anniki8x8.h"
+#include "psf/anniki16x16.h"
+#include "std/mem.h"
+#include "std/string.h"
+#include "std/utils.h"
+#include "math/math.h"
+#include "graphics/colors.h"
 
 typedef struct framebuffer {
     uint32_t width;
@@ -30,7 +31,7 @@ static inline uint32_t fb_get_pixel(framebuffer* fb, uint32_t x, uint32_t y) {
     return fb->addr[y * (fb->pitch / sizeof(uint32_t)) + x];
 }
 
-static inline uint8_t* get_glyph(unsigned char c) {
+static inline uint8_t *get_glyph(unsigned char c) {
     return &psf[PSF_HEADER_SIZE + c * GLYPH_BYTES];
 }
 
@@ -43,7 +44,7 @@ void fb_fill(framebuffer *fb, uint32_t width, uint32_t height, uint32_t color) {
 }
 
 void _fb_raw_putchar(framebuffer *fb, uint32_t x, uint32_t y, unsigned char c, uint32_t color) {
-    uint8_t* glyph = get_glyph(c);
+    uint8_t *glyph = get_glyph(c);
 
 #if GLYPH_WIDTH == 8 && GLYPH_HEIGHT == 8
     for (int row = 0; row < GLYPH_HEIGHT; row++) {
@@ -57,7 +58,7 @@ void _fb_raw_putchar(framebuffer *fb, uint32_t x, uint32_t y, unsigned char c, u
 
 #elif GLYPH_WIDTH == 16 && GLYPH_HEIGHT == 16
     for (int row = 0; row < GLYPH_HEIGHT; row++) {
-        uint16_t bits = ((uint16_t)glyph[row * 2] << 8) | glyph[row * 2 + 1];
+        uint16_t bits = ((uint16_t) glyph[row * 2] << 8) | glyph[row * 2 + 1];
 
         for (int col = 0; col < 16; col++) {
             if (bits & (1 << (15 - col))) {
@@ -199,4 +200,4 @@ void fb_clear(framebuffer *fb) {
     _char_row = 0;
 }
 
-#endif // FBOUT_H
+#endif // FRAMEBUFFER_H

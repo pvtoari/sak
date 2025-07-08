@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 #include <stdbool.h>
-#include "mem.h"
+#include "std/mem.h"
 
 #define VECTOR_INIT_CAPACITY 64
 #define SUCCESS 0
@@ -19,22 +19,22 @@ typedef struct Vector vector;
 
 struct Vector {
     List vectorList;
-    int (*size)(vector*);
-    int (*resize)(vector*, int);
-    int (*add)(vector*, void*);
-    int (*set)(vector*, int, void*);
-    void* (*get)(vector*, int);
-    int (*delete)(vector*, int);
-    int (*free)(vector*);
+    int (*size) (vector *);
+    int (*resize) (vector *, int);
+    int (*add) (vector *, void *);
+    int (*set) (vector *, int, void *);
+    void *(*get) (vector *, int);
+    int (*delete) (vector *, int);
+    int (*free) (vector *);
 };
 
-int _size(vector* v) {
+int _size(vector *v) {
     if(!v) return UNDEFINED;
     
     return v->vectorList.size;
 }
 
-int _resize(vector* v, int capacity) {
+int _resize(vector *v, int capacity) {
     if(!v || capacity <= 0) return UNDEFINED;
 
     void **items = realloc(v->vectorList.items, sizeof(void *) * capacity);
@@ -46,10 +46,10 @@ int _resize(vector* v, int capacity) {
     return SUCCESS;
 }
 
-int _add(vector* v, void* item) {
+int _add(vector *v, void *item) {
 	if(!v) return UNDEFINED;
 
-	if(v->vectorList.size == v ->vectorList.capacity)
+	if(v->vectorList.size == v->vectorList.capacity)
 		if(_resize(v, v->vectorList.capacity * 2) == UNDEFINED) return UNDEFINED;
 
 	v->vectorList.items[v->vectorList.size++] = item;
@@ -57,7 +57,7 @@ int _add(vector* v, void* item) {
 	return SUCCESS;
 }
 
-int _set(vector* v, int index, void* item) {
+int _set(vector *v, int index, void *item) {
 	if(!v) return UNDEFINED;
 	if(!((index >= 0) && (index < v->vectorList.size))) return UNDEFINED;
 
@@ -66,14 +66,14 @@ int _set(vector* v, int index, void* item) {
 	return SUCCESS;
 }
 
-void* _get(vector* v, int index) {
+void* _get(vector *v, int index) {
 	if(!v) return NULL;
 	if(!((index >= 0) && (index < v->vectorList.size))) return NULL;
 
 	return v->vectorList.items[index];
 }
 
-int _delete(vector* v, int index) {
+int _delete(vector *v, int index) {
     if(!v) return UNDEFINED;
     if((index < 0) || (index >= v->vectorList.size)) return UNDEFINED;
     
@@ -91,10 +91,10 @@ int _delete(vector* v, int index) {
     return _resize(v, v->vectorList.capacity/2);
 }
 
-void vector_init(vector* v) {
+void vector_init(vector *v) {
     if(!v) return;
 
-   	v->vectorList.items = malloc(VECTOR_INIT_CAPACITY * sizeof(void*));
+   	v->vectorList.items = malloc(VECTOR_INIT_CAPACITY * sizeof(void *));
     v->vectorList.capacity = VECTOR_INIT_CAPACITY;
     v->vectorList.size = 0;
     

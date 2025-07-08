@@ -28,8 +28,12 @@
 //#include <compiler.h>
 
 //__BEGIN_CDECLS
+
+// This is a workaround.should be like this:
+// extern int *__geterrno(void);
 static int _errno;
 int *__geterrno(void) { return &_errno; }
+
 #define errno (*__geterrno())
 #define	EPERM 1		/* Not super-user */
 #define	ENOENT 2	/* No such file or directory */

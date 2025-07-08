@@ -13,8 +13,7 @@ Define structures and macros for manipulating IEEE floats
 
 #define isnan __IsNan
 
-struct f64
-{
+struct f64 {
 	uint32_t low_word;
 	uint32_t high_word;
 };

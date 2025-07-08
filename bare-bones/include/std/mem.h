@@ -13,10 +13,10 @@ extern unsigned char _end;
 static unsigned char* heap = &_end;
 static size_t used = 0;
 
-void* memcpy(void* dest, const void *src, size_t n) {
-    uint8_t* d = dest;
-    const uint8_t* s = src;
-    
+void* memcpy(void *dest, const void *src, size_t n) {
+    uint8_t *d = dest;
+    const uint8_t *s = src;
+
     for (size_t i = 0; i < n; i++) d[i] = s[i];
     
     return dest;
@@ -36,10 +36,10 @@ void* malloc(size_t size) {
     
     if (used + total_size > HEAP_SIZE) return NULL;
 
-    size_t* size_ptr = (size_t*)(heap + used);
+    size_t *size_ptr = (size_t *)(heap + used);
     *size_ptr = size;
-    
-    void* ptr = (void*)(size_ptr + 1);
+
+    void *ptr = (void *)(size_ptr + 1);
     used += total_size;
     
     return ptr;
@@ -47,13 +47,13 @@ void* malloc(size_t size) {
 
 void* realloc(void* ptr, size_t size) {
     if (!ptr) return malloc(size);
-    
-    size_t* size_ptr = (size_t*)ptr - 1;
+
+    size_t *size_ptr = (size_t *)ptr - 1;
     size_t old_size = *size_ptr;
     
     if (size <= old_size && align_up(size) >= old_size - ALIGNMENT) return ptr;
-    
-    void* new_ptr = malloc(size);
+
+    void *new_ptr = malloc(size);
     if (!new_ptr) return NULL;
 
     size_t copy_size = old_size < size ? old_size : size;

@@ -1,7 +1,7 @@
 #include <stdint.h>
-#include "costable_0_001.h"
-#include "ieee_float.h"
-#include "errno.h"
+#include "math/costable_0_001.h"
+#include "math/ieee_float.h"
+#include "std/errno.h"
 
 #ifndef MATH_H
 #define MATH_H
@@ -42,14 +42,15 @@ double trunc(double x) {
 	int e = (int)(u.i >> 52 & 0x7ff) - 0x3ff + 12;
 	uint64_t m;
 
-	if (e >= 52 + 12)
-		return x;
-	if (e < 12)
-		e = 1;
+	if (e >= 52 + 12) return x;
+	if (e < 12) e = 1;
+	
 	m = -1ULL >> e;
 	if ((u.i & m) == 0) return x;
+
 	FORCE_EVAL(x + 0x1p120f);
 	u.i &= ~m;
+
 	return u.f;
 }
 
@@ -105,7 +106,7 @@ double pow(double x, double n) {
     }
     
     while(n>0) {
-        if((int) n % 2 == 1){
+        if((int) n % 2 == 1) {
             ans = ans * x;
             n = n - 1;
         } else {
@@ -126,16 +127,15 @@ double ldexp(double value, int exp) {
 	exp_bias= 0;
 
 	oldexp= F64_GET_EXP(f64p);
-	if (oldexp == F64_EXP_MAX)
-	{	/* Either infinity or Nan */
+	if (oldexp == F64_EXP_MAX) {	
+		/* Either infinity or Nan */
 		return value;
 	}
-	if (oldexp == 0)
-	{
+
+	if (oldexp == 0) {
 		/* Either 0 or denormal */
 		if (F64_GET_MANT_LOW(f64p) == 0 &&
-			F64_GET_MANT_HIGH(f64p) == 0)
-		{
+			F64_GET_MANT_HIGH(f64p) == 0) {
 			return value;
 		}
 	}
@@ -144,21 +144,18 @@ double ldexp(double value, int exp) {
 	 * (< -2*F64_EXP_MAX) return HUGE_VAL or 0. This prevents overflows
 	 * in exp if exp is really weird
 	 */
-	if (exp >= 2*F64_EXP_MAX)
-	{
+	if (exp >= 2*F64_EXP_MAX) {
 		errno= ERANGE;
 		return HUGE_VAL;
 	}
-	
-	if (exp <= -2*F64_EXP_MAX)
-	{
+
+	if (exp <= -2*F64_EXP_MAX) {
 		errno= ERANGE;
 		return 0;
 	}
 	
 	/* Normalize a denormal */
-	if (oldexp == 0)
-	{
+	if (oldexp == 0) {
 		/* Multiply by 2^64 */
 		factor= 65536.0;	/* 2^16 */
 		factor *= factor;	/* 2^32 */
@@ -169,17 +166,18 @@ double ldexp(double value, int exp) {
 	}
 
 	exp= oldexp + exp;
-	if (exp >= F64_EXP_MAX)
-	{	/* Overflow */
-		errno= ERANGE;
+	if (exp >= F64_EXP_MAX) {
+		/* Overflow */
+		 errno= ERANGE;
 		return HUGE_VAL;
 	}
-	if (exp > 0)
-	{
+
+	if (exp > 0) {
 		/* Normal */
 		F64_SET_EXP(f64p, exp);
 		return value;
 	}
+
 	/* Denormal, or underflow. */
 	exp += 64;
 	F64_SET_EXP(f64p, exp);
@@ -188,13 +186,12 @@ double ldexp(double value, int exp) {
 	factor *= factor;	/* 2^32 */
 	factor *= factor;	/* 2^64 */
 	value /= factor;
-	if (value == 0.0)
-	{
+	if (value == 0.0) {
 		/* Underflow */
 		errno= ERANGE;
 	}
+
 	return value;
 }
 
-
-#endif
+#endif // MATH_H
