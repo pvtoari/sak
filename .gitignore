@@ -1,3 +1,4 @@
+.vscode
 gcc-cross-compiler/*/**
 !gcc-cross-compiler/src
 
@@ -11,3 +12,4 @@ uefi/*
 *.o
 *.bin
 *.iso
+*.img
