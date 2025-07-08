@@ -9,7 +9,28 @@
 #include "multiboot2.h"
 #include "fbout.h"
 #include "acpi.h"
+#include "chudjackr.h"
 
+#define STBI_NO_STDIO
+#define STBI_NO_HDR
+#define STBI_ASSERT
+#define STB_IMAGE_IMPLEMENTATION
+#define STBI_NO_ZLIB
+#define STBI_NO_THREAD_LOCALS
+#define STBI_NO_FAILURE_STRINGS
+#define STBI_NO_LINEAR
+#define STBI_NO_HDR
+#define STBI_NO_PSD
+#define STBI_NO_TGA
+#define STBI_NO_GIF
+#define STBI_NO_PIC
+#define STBI_NO_PNM
+
+#include "stb_image.h"
+
+char *stbi_zlib_decode_malloc_guesssize_headerflag(const char *buffer, int len, int initial_size, int *outlen, int parse_header) {
+    return 0;
+}
 
 #if !defined(__i386__)
 #error "This needs to be compiled with a ix86-elf compiler"
@@ -135,6 +156,50 @@ void kernel_main(uint32_t multiboot_addr, uint32_t magic) {
             
             fb_printf(&fb, "%c", read);
         }
+
+        int width, height, channels;
+        unsigned char *image = stbi_load_from_memory(
+            chudjackr_jpg,
+            chudjackr_jpg_len,
+            &width, &height, &channels,
+            4
+        );
+
+        if(!image) {
+            fb_printf(&fb, "chudjack could not be loaded :(");
+            while(true);
+        }
+        
+        fb_printf(&fb, "Loaded image: %dx%d (%d channels)\n", width, height, channels);
+        fb_printf(&fb, "Chudjack pointer: 0x%x  | sizeof pointer: %d \n", image, sizeof(image));
+
+        uint32_t x_offset = ((fb.width > width) ? (fb.width - width) / 2 : 0);
+        uint32_t y_offset = ((fb.height > height) ? (fb.height - height) / 2 : 0) + 340;
+        fb_printf(&fb, "Printing at x:%d y:%d\n", x_offset, y_offset);
+
+        while(true) {
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    unsigned char* pixel = &image[(y * width + x) * 4];
+                    uint8_t r = pixel[0];
+                    uint8_t g = pixel[1];
+                    uint8_t b = pixel[2];
+                    // uint8_t a = pixel[3]; // JPG no tiene, puedes ignorar
+        
+                    uint32_t color = (r << 16) | (g << 8) | b;
+                    for(int i = 0; i < 12; i++) {
+                        fb_put_pixel(&fb, x + x_offset+16*i, y + y_offset-64*i, color);
+                    }
+                }
+            }
+
+            x_offset = (x_offset + 1) % fb.width;
+            sleep(300);
+        }
+
+        fb_printf(&fb, "Done!");
+
+        while(true);         
 
         uint32_t color[14] = {
             C_RED, C_LIME, C_BLUE, C_YELLOW,
