@@ -6,6 +6,7 @@
 #include <stdarg.h>
 //#include "psf/anniki8x8.h"
 #include "psf/anniki16x16.h"
+#include <stdbool.h>
 #include "std/mem.h"
 #include "std/string.h"
 #include "std/utils.h"
@@ -20,8 +21,8 @@ typedef struct framebuffer {
     uint32_t *addr;
 } framebuffer;
 
-size_t _char_row;
-size_t _char_column;
+static size_t _char_row = 0;
+static size_t _char_column = 0;
 
 static inline void fb_put_pixel(framebuffer* fb, uint32_t x, uint32_t y, uint32_t color) {
     fb->addr[y * (fb->pitch / sizeof(uint32_t)) + x] = color;

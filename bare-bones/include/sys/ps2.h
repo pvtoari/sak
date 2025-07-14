@@ -2,6 +2,7 @@
 #define PS2_H
 
 #include <stdint.h>
+#include <stdbool.h>
 #include "sys/ioports.h"
 
 /*
