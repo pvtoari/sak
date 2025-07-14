@@ -198,13 +198,13 @@ void kernel_main(uint32_t multiboot_addr, uint32_t magic) {
                     vga_printf("Unsupported framebuffer type: %d\n", fbtag->framebuffer_type);
                     while (1);
                 }
-            
+
                 fb.width = fbtag->framebuffer_width;
                 fb.height = fbtag->framebuffer_height;
                 fb.bpp = fbtag->framebuffer_bpp;
                 fb.pitch = fbtag->framebuffer_pitch;
                 fb.addr = (uint32_t *)(uintptr_t)fbtag->framebuffer_addr;
-
+            
                 fb_printf(&fb, "Framebuffer found!\n");
                 fb_printf(&fb, "Framebuffer width: %d\n", fb.width);
                 fb_printf(&fb, "Framebuffer height: %d\n", fb.height);
@@ -250,28 +250,89 @@ void kernel_main(uint32_t multiboot_addr, uint32_t magic) {
         uint8_t res = ps2_keyboard_init();
         if(res != 0) {
             fb_printf(&fb, "Something went wrong while initializing the PS/2 keyboard\n");
-            fb_printf(&fb, "Error code: %d\n", res+'0');
+            fb_printf(&fb, "Error code: %d\n", res);
             while(true);
         }
 
         res = ps2_keyboard_set_scan_code_set(2);
         if(res != 0) {
             fb_printf(&fb, "Something went wrong while setting scan code set to 2\n");
-            fb_printf(&fb, "Error code: %d\n", res+'0');
+            fb_printf(&fb, "Error code: %d\n", res);
+            while(true);
+        }
+        
+        res = ps2_mouse_init();
+        if(res != 0) {
+            fb_printf(&fb, "Something went wrong while initializing the PS/2 mouse\n");
+            fb_printf(&fb, "Error code: %d\n", res);
             while(true);
         }
 
+        res = ps2_mouse_set_sample_rate(PS2_MOUSE_SUBCOMMAND_SET_SAMPLE_RATE_FORTY);
+        if(res != 0) {
+            fb_printf(&fb, "Something went wrong while setting sample rate to 40\n");
+            fb_printf(&fb, "Error code: %d\n", res);
+            while(true);
+        }
+
+        // res = ps2_mouse_enable_scroll_wheel();
+        // if(res != 0) {
+        //     fb_printf(&fb, "Something went wrong while enabling scroll wheel\n");
+        //     fb_printf(&fb, "Error code: %d\n", res);
+        //     while(true);
+        // }
+
+        res = ps2_mouse_enable_packet_streaming();
+        if(res != 0) {
+            fb_printf(&fb, "Something went wrong while enabling PS/2 mouse packet streaming\n");
+            fb_printf(&fb, "Error code: %d\n", res);
+            while(true);
+        }
+        
+        res = ps2_mouse_disable_packet_streaming();
+        if(res != 0) {
+            fb_printf(&fb, "Something went wrong while disabling PS/2 mouse packet streaming\n");
+            fb_printf(&fb, "Error code: %d\n", res);
+            while(true);
+        }
+        
         fb_printf(&fb, "PS/2 keyboard initialized. Test your typing (F1=clear ESC=exit):\n");
         
         while (true) {
-            uint8_t sc = _read_scan_code();
-            char read = ps2_scan_code_to_char(sc, false);\
-            
-            if (sc == 0x01) break; // ESC
-            if(sc == 0x3B) fb_clear(&fb); // F1
-            if(read == 0) continue;
-            
-            fb_printf(&fb, "%c", read);
+            uint8_t sc = ps2_read_data();
+
+            if (ps2_data_from_mouse()) {
+                uint8_t packet[4];
+                packet[0] = sc;
+        
+                for (int i = 1; i < 4; i++) {
+                    while (!ps2_output_buffer_status());
+                    packet[i] = ps2_read_data();
+                }
+                
+                uint8_t left_button_down = ps2_mouse_packet_first_byte_left_button_down(packet[0]);
+                uint8_t right_button_down = ps2_mouse_packet_first_byte_right_button_down(packet[0]);
+                uint8_t middle_button_down = ps2_mouse_packet_first_byte_middle_button_down(packet[0]);
+                uint8_t x_sign = ps2_mouse_packet_first_byte_x_sign(packet[0]);
+                uint8_t y_sign = ps2_mouse_packet_first_byte_y_sign(packet[0]);
+                uint8_t x_overflow = ps2_mouse_packet_first_byte_x_overflow(packet[0]);
+                uint8_t y_overflow = ps2_mouse_packet_first_byte_y_overflow(packet[0]);
+        
+                fb_printf(&fb, "Mouse Packet:\n");
+                fb_printf(&fb, "Left btn: %d, Right btn: %d, Middle btn: %d\n", left_button_down, right_button_down, middle_button_down);
+                fb_printf(&fb, "x sign: %d, y sign: %d\n", x_sign, y_sign);
+                fb_printf(&fb, "x overflow: %d, y overflow: %d\n", x_overflow, y_overflow);
+                fb_printf(&fb, "x movement: %d, y movement: %d\n", (int8_t)packet[1], (int8_t)packet[2]);
+                fb_printf(&fb, "Scroll: %d\n", (int8_t)packet[3]);
+            } else {
+                if (sc == 0x01) break; // ESC
+                if (sc == 0x3B) fb_clear(&fb); // F1
+                if (sc == 0x3D) ps2_mouse_enable_packet_streaming(); // F3
+                if (sc == 0x3E) ps2_mouse_disable_packet_streaming(); // F4
+                
+                char read = ps2_scan_code_to_char(sc, false);
+                if (read != 0) fb_printf(&fb, "%c", read);
+            }
         }
 
         //plane(&fb);
