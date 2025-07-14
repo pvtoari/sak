@@ -63,6 +63,14 @@ void fb_draw_line(framebuffer *fb, uint32_t x0, uint32_t y0, uint32_t x1, uint32
     }
 }
 
+void fb_draw_rectangle(framebuffer *fb, uint32_t x0, uint32_t y0, uint32_t x1, uint32_t y1, uint32_t color) {
+    for (uint32_t y = y0; y < y1; y++) {
+        for (uint32_t x = x0; x < x1; x++) {
+            fb_put_pixel(fb, x, y, color);
+        }
+    }    
+}
+
 void _fb_raw_putchar(framebuffer *fb, uint32_t x, uint32_t y, unsigned char c, uint32_t color) {
     uint8_t *glyph = get_glyph(c);
 
@@ -113,7 +121,6 @@ void fb_scroll(framebuffer *fb) {
     _char_column = 0;
 }
 
-
 void fb_putchar(framebuffer *fb, unsigned char c, uint32_t color) {
     const uint32_t max_columns = fb->width / GLYPH_WIDTH, max_rows = fb->height / GLYPH_HEIGHT;
     uint32_t x, y;
@@ -134,12 +141,7 @@ void fb_putchar(framebuffer *fb, unsigned char c, uint32_t color) {
             }
 
             x = _char_column * GLYPH_WIDTH, y = _char_row * GLYPH_HEIGHT;
-            for (uint32_t row = 0; row < GLYPH_HEIGHT; row++) {
-                for (uint32_t col = 0; col < GLYPH_WIDTH; col++) {
-                    fb_put_pixel(fb, x + col, y + row, C_BLACK);
-                }
-            }
-            
+            fb_draw_rectangle(fb, x, y, x + GLYPH_WIDTH, y + GLYPH_HEIGHT, C_BLACK);
             break;
         case '\t':
             // TODO
