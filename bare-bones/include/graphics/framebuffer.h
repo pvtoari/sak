@@ -24,11 +24,15 @@ typedef struct framebuffer {
 static size_t _char_row = 0;
 static size_t _char_column = 0;
 
-static inline void fb_put_pixel(framebuffer* fb, uint32_t x, uint32_t y, uint32_t color) {
+static inline void fb_put_pixel(framebuffer *fb, uint32_t x, uint32_t y, uint32_t color) {
+    if (x >= fb->width || y >= fb->height) return;
+    
     fb->addr[y * (fb->pitch / sizeof(uint32_t)) + x] = color;
 }
 
-static inline uint32_t fb_get_pixel(framebuffer* fb, uint32_t x, uint32_t y) {
+static inline uint32_t fb_get_pixel(framebuffer *fb, uint32_t x, uint32_t y) {
+    if (x >= fb->width || y >= fb->height) return 0;
+    
     return fb->addr[y * (fb->pitch / sizeof(uint32_t)) + x];
 }
 
