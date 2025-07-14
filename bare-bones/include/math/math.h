@@ -21,6 +21,34 @@
 #define HUGE_VAL   1.7976931348623158e+308
 #define HUGE_VALL  1.189731495357231765e+4932L  // según plataforma
 
+
+// https://www.netlib.org/fdlibm/fdlibm.h
+#if defined(i386) || defined(i486) || \
+	defined(intel) || defined(x86) || defined(i86pc) || \
+	defined(__alpha) || defined(__osf__)
+#define __LITTLE_ENDIAN
+#endif
+
+#ifdef __LITTLE_ENDIAN
+#define __HI(x) *(1+(int*)&x)
+#define __LO(x) *(int*)&x
+#define __HIp(x) *(1+(int*)x)
+#define __LOp(x) *(int*)x
+#else
+#define __HI(x) *(int*)&x
+#define __LO(x) *(1+(int*)&x)
+#define __HIp(x) *(int*)x
+#define __LOp(x) *(1+(int*)x)
+#endif
+
+#ifdef __STDC__
+static const double huge = 1.0e300;
+#define	__P(p)	p
+#else
+static double huge = 1.0e300;
+#define	__P(p)	()
+#endif
+
 static inline int min(int a, int b) {
     return (b < a) ? b : a;
 }
@@ -80,20 +108,6 @@ double cos(double x) {
 double sin(double x) {
     return cos(x - PI_2);
 }
-
-/*
-double pow(double a, double b) {
-    double res = 1;
-    
-    while (b > 0) {
-        if (b & 1) res = res * a;
-        a = a * a;
-        b >>= 1;
-    }
-    
-    return res;
-}
-*/
 
 double pow(double x, double n) {
     if(x==0 || x==1) return x;
@@ -193,5 +207,93 @@ double ldexp(double value, int exp) {
 
 	return value;
 }
+
+double ceil(double x) {
+	int i0,i1,j0;
+	unsigned i,j;
+	i0 =  __HI(x);
+	i1 =  __LO(x);
+	j0 = ((i0>>20)&0x7ff)-0x3ff;
+	if(j0<20) {
+	    if(j0<0) { 	/* raise inexact if x != 0 */
+		if(huge+x>0.0) {/* return 0*sign(x) if |x|<1 */
+		    if(i0<0) {i0=0x80000000;i1=0;} 
+		    else if((i0|i1)!=0) { i0=0x3ff00000;i1=0;}
+		}
+	    } else {
+		i = (0x000fffff)>>j0;
+		if(((i0&i)|i1)==0) return x; /* x is integral */
+		if(huge+x>0.0) {	/* raise inexact flag */
+		    if(i0>0) i0 += (0x00100000)>>j0;
+		    i0 &= (~i); i1=0;
+		}
+	    }
+	} else if (j0>51) {
+	    if(j0==0x400) return x+x;	/* inf or NaN */
+	    else return x;		/* x is integral */
+	} else {
+	    i = ((unsigned)(0xffffffff))>>(j0-20);
+	    if((i1&i)==0) return x;	/* x is integral */
+	    if(huge+x>0.0) { 		/* raise inexact flag */
+		if(i0>0) {
+		    if(j0==20) i0+=1; 
+		    else {
+			j = i1 + (1<<(52-j0));
+			if(j<i1) i0+=1;	/* got a carry */
+			i1 = j;
+		    }
+		}
+		i1 &= (~i);
+	    }
+	}
+	__HI(x) = i0;
+	__LO(x) = i1;
+	return x;
+}
+
+double floor(double x) {
+	int i0,i1,j0;
+	unsigned i,j;
+	i0 =  __HI(x);
+	i1 =  __LO(x);
+	j0 = ((i0>>20)&0x7ff)-0x3ff;
+	if(j0<20) {
+	    if(j0<0) { 	/* raise inexact if x != 0 */
+		if(huge+x>0.0) {/* return 0*sign(x) if |x|<1 */
+		    if(i0>=0) {i0=i1=0;} 
+		    else if(((i0&0x7fffffff)|i1)!=0)
+			{ i0=0xbff00000;i1=0;}
+		}
+	    } else {
+		i = (0x000fffff)>>j0;
+		if(((i0&i)|i1)==0) return x; /* x is integral */
+		if(huge+x>0.0) {	/* raise inexact flag */
+		    if(i0<0) i0 += (0x00100000)>>j0;
+		    i0 &= (~i); i1=0;
+		}
+	    }
+	} else if (j0>51) {
+	    if(j0==0x400) return x+x;	/* inf or NaN */
+	    else return x;		/* x is integral */
+	} else {
+	    i = ((unsigned)(0xffffffff))>>(j0-20);
+	    if((i1&i)==0) return x;	/* x is integral */
+	    if(huge+x>0.0) { 		/* raise inexact flag */
+		if(i0<0) {
+		    if(j0==20) i0+=1; 
+		    else {
+			j = i1+(1<<(52-j0));
+			if(j<i1) i0 +=1 ; 	/* got a carry */
+			i1=j;
+		    }
+		}
+		i1 &= (~i);
+	    }
+	}
+	__HI(x) = i0;
+	__LO(x) = i1;
+	return x;
+}
+
 
 #endif // MATH_H
