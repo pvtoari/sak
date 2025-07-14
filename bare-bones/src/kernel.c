@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include "graphics/vga.h"
 #include "graphics/framebuffer.h"
+#include "math/geometry.h"
 #include "std/utils.h"
 #include "sys/ps2.h"
 #include "sys/multiboot2.h"
@@ -51,6 +52,122 @@ FADT_t *findFACP(void *RootSDT) {
 
     // No FACP found
     return NULL;
+}
+
+void cube(framebuffer *fb) {
+    const uint32_t width = fb->width;
+    const uint32_t height = fb->height;
+    const uint32_t scale = 300;
+    const uint32_t color = C_WHITE;
+    const uint32_t bg = C_BLACK;
+    const double inc = 0.01f;
+    const double threshold = 1000;
+    
+    vec3 cube[8] = {
+        {-1, -1, -1}, {1, -1, -1},
+        {1,  1, -1}, {-1,  1, -1},
+        {-1, -1,  1}, {1, -1,  1},
+        {1,  1,  1}, {-1,  1,  1}
+    };
+    
+    edge edges[12] = {
+        {0,1},{1,2},{2,3},{3,0},
+        {4,5},{5,6},{6,7},{7,4},
+        {0,4},{1,5},{2,6},{3,7}
+    };
+
+    vec2 prev[8] = {0};
+
+    vec3 transformed[8];
+    vec2 projected[8];
+    double angle = 0.0;
+    double z_offset = (width + height)/(2 * scale);
+    while(true) {
+        for(int i = 0; i < 8; i++) {
+            transformed[i] = cube[i];
+            
+            rotate_y(&transformed[i], angle);
+            rotate_x(&transformed[i], angle);
+            rotate_z(&transformed[i], angle);
+            projected[i] = project(&transformed[i], width, height, scale, z_offset);
+        }
+
+        for(int i = 0; i < 12; i++) {
+            vec2 a = prev[edges[i].a];
+            vec2 b = prev[edges[i].b];
+
+            fb_draw_line(fb, a.x, a.y, b.x, b.y, bg);
+        }    
+
+        for(int i = 0; i < 12; i++) {
+            vec2 a = projected[edges[i].a];
+            vec2 b = projected[edges[i].b];
+
+            fb_draw_line(fb, a.x, a.y, b.x, b.y, color);
+        }
+
+        for(int i = 0; i < 8; i++) prev[i] = projected[i];
+
+        angle += inc;
+        sleep(threshold);
+    }
+}
+
+void plane(framebuffer *fb) {
+    const uint32_t width = fb->width;
+    const uint32_t height = fb->height;
+    const uint32_t scale = 200;
+    const uint32_t color = C_WHITE;
+    const uint32_t bg = C_BLACK;
+    const double inc = 0.01f;
+    const double threshold = 1000;
+    
+    static vec3 plane[4] = {
+        {-1, -1, 0},
+        { 1, -1, 0},
+        { 1,  1, 0},
+        {-1,  1, 0}
+    };
+    
+    static edge edges[4] = {
+        {0,1}, {1,2}, {2,3}, {3,0}
+    };
+
+    static vec2 prev[4] = {0};
+
+    vec3 transformed[4];
+    vec2 projected[4];
+    double angle = 0.0;
+    double z_offset = (width + height)/(2 * scale);
+    while(true) {
+        for(int i = 0; i < 4; i++) {
+            transformed[i] = plane[i];
+            
+            rotate_y(&transformed[i], angle);
+            rotate_x(&transformed[i], angle);
+            rotate_z(&transformed[i], angle);
+            projected[i] = project(&transformed[i], width, height, scale, z_offset);
+        }
+
+        for(int i = 0; i < 4; i++) {
+            vec2 a = prev[edges[i].a];
+            vec2 b = prev[edges[i].b];
+
+            fb_draw_line(fb, a.x, a.y, b.x, b.y, bg);
+        }    
+
+        for(int i = 0; i < 4; i++) {
+            vec2 a = projected[edges[i].a];
+            vec2 b = projected[edges[i].b];
+
+            fb_draw_line(fb, a.x, a.y, b.x, b.y, color);
+        }
+
+        for(int i = 0; i < 4; i++) prev[i] = projected[i];
+
+        angle += inc;
+        sleep(threshold);
+    }
 }
 
 void kernel_main(uint32_t multiboot_addr, uint32_t magic) {
@@ -156,6 +273,9 @@ void kernel_main(uint32_t multiboot_addr, uint32_t magic) {
             
             fb_printf(&fb, "%c", read);
         }
+
+        //plane(&fb);
+        cube(&fb);
 
         int width, height, channels;
         unsigned char *image = stbi_load_from_memory(
