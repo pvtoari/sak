@@ -400,50 +400,5 @@ void kernel_main(uint32_t multiboot_addr, uint32_t magic) {
         }
     } else {
         // VGA TEXT MODE
-        //uint32_t width = mbd->framebuffer_width;
-        //uint32_t height = mbd->framebuffer_height;
-        //uint8_t bpp = mbd->framebuffer_bpp;
-        //vga_printf("Resolution: %dx%d\n", width, height);
-        //vga_printf("BPP: %d\n", bpp);
-        vga_printf("No framebuffer available, using VGA text mode\n");
-
-        vga_clear();
-        vga_printf("Keyboard testing\n");
-
-        uint8_t res = ps2_keyboard_init();
-        if(res != 0) {
-            vga_printf("Something went wrong while initializing the PS/2 keyboard\n");
-            vga_printf("Error code: %d\n", res+'0');
-            while(true);
-        }
-
-        res = ps2_keyboard_set_scan_code_set(2);
-        if(res != 0) {
-            vga_printf("Something went wrong while setting scan code set to 2\n");
-            vga_printf("Error code: %d\n", res+'0');
-            while(true);
-        }
-
-        vga_printf("PS/2 keyboard initialized. Test your typing (F1=clear ESC=exit):\n");
-
-        while (true) {
-            uint8_t sc = _read_scan_code();
-            char read = ps2_scan_code_to_char(sc, false);
-            
-            if (sc == 0x01) break; // ESC
-            if(sc == 0x3B) vga_clear(); // F1
-            if(read == 0) continue;
-            
-            vga_printf("%c", read);
-        }
-
-        int i = 0;
-        while(true) {
-            vga_clear();
-            vga_setcolor(i+1);
-            vga_printf("%s", frames[i]);
-            i = (i + 1) % FRAMES_COUNT;
-            sleep(8000);
-        }
     }
 }
