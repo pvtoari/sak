@@ -4,9 +4,9 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdarg.h>
+#include <stdbool.h>
 //#include "psf/anniki8x8.h"
 #include "psf/anniki16x16.h"
-#include <stdbool.h>
 #include "std/mem.h"
 #include "std/string.h"
 #include "std/utils.h"
