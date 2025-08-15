@@ -1,13 +1,5 @@
 .vscode
 .idea
-gcc-cross-compiler/*/**
-!gcc-cross-compiler/src
-
-uefi/*
-!uefi/*.c
-!uefi/*.h
-!uefi/include
-!uefi/src
 
 !*.sh
 *.o
