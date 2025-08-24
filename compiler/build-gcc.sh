@@ -1,5 +1,5 @@
 #!/bin/bash
-cd $ROOT_PROJECT/gcc-cross-compiler/src
+cd $ROOT_PROJECT/compiler/src
 
 # The $PREFIX/bin dir _must_ be in the PATH. We did that above.
 which -- $TARGET-as || echo $TARGET-as is not in the PATH

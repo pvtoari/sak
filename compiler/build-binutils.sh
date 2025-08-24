@@ -1,5 +1,5 @@
 #!/bin/bash
-cd $ROOT_PROJECT/gcc-cross-compiler/src
+cd $ROOT_PROJECT/compiler/src
 
 mkdir build-binutils
 cd build-binutils
