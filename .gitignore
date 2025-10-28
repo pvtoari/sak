@@ -1,8 +1,14 @@
 .vscode
 .idea
+build
+ovmf
+builddir
+buildDir
+limine
+iso_root
 
-!*.sh
 *.o
 *.bin
 *.iso
 *.img
+*.hdd

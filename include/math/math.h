@@ -1,4 +1,5 @@
 #include <stdint.h>
+
 #include "math/costable_0_001.h"
 #include "math/ieee_float.h"
 #include "std/errno.h"
@@ -294,6 +295,5 @@ double floor(double x) {
 	__LO(x) = i1;
 	return x;
 }
-
 
 #endif // MATH_H

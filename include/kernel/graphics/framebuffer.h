@@ -5,13 +5,13 @@
 #include <stddef.h>
 #include <stdarg.h>
 #include <stdbool.h>
-//#include "psf/anniki8x8.h"
-#include "psf/anniki16x16.h"
-#include "std/mem.h"
-#include "std/string.h"
-#include "std/utils.h"
-#include "math/math.h"
+
 #include "graphics/colors.h"
+#include "std/string.h"
+#include "std/misc.h"
+#include "math/math.h"
+#include "kernel/psf/anniki16x16.h"
+#include "kernel/std/mem.h"
 
 typedef struct framebuffer {
     uint32_t width;

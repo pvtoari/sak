@@ -1,0 +1,5 @@
+[wrap-git]
+url = https://codeberg.org/OSDev/freestnd-c-hdrs-0bsd.git
+revision = 5e4e9e70278fe89ea328d359a58aff4f4a94b165
+depth = 1
+patch_directory = freestnd-c-hdrs

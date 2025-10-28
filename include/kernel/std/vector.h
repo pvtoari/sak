@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 #include <stdbool.h>
-#include "std/mem.h"
+#include "kernel/std/mem.h"
 
 #define VECTOR_INIT_CAPACITY 64
 #define SUCCESS 0

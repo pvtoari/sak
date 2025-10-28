@@ -1,7 +1,7 @@
 #ifndef GEOMETRY_H
 #define GEOMETRY_H
 
-#include "graphics/framebuffer.h"
+#include "math/math.h"
 
 typedef struct {
     int a, b;

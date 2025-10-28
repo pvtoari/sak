@@ -3,7 +3,8 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "sys/ioports.h"
+
+#include "io/mmio.h"
 
 /*
 	PS/2 Serial ports
@@ -179,6 +180,7 @@ reset:
 }
 
 uint8_t ps2_read_scan_code(bool *released, bool *extended) {
+	// stupid shit that doesnt work
     static bool got_f0 = false;
     static bool got_e0 = false;
 
@@ -364,6 +366,7 @@ unsigned char ps2_scan_code_to_char(unsigned char scan_code, bool shift) {
 }
 
 uint8_t ps2_keyboard_set_scan_code_set(uint8_t set) {
+	// doesnt work
 	while (ps2_input_buffer_status());
 	ps2_send_first_port_command(PS2_COMMAND_SET_CURRENT_SCAN_CODE_SET);
 	while (!ps2_output_buffer_status());

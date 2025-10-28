@@ -5,11 +5,12 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdarg.h>
-#include "vgaconsts.h"
+
 #include "std/string.h"
-#include "std/utils.h"
-#include "std/mem.h"
+#include "std/misc.h"
 #include "math/math.h"
+#include "kernel/graphics/vgaconsts.h"
+#include "kernel/std/mem.h"
 
 #define VGA_WIDTH	80
 #define VGA_HEIGHT  25
