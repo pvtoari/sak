@@ -2,7 +2,10 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-#include "kernel/boot/limine.h"
+#include <kernel/cpu/dump.h>
+#include <std/misc.h>
+#include <kernel/graphics/framebuffer.h>
+#include <kernel/boot/limine.h>
 
 __attribute__((used, section(".limine_requests")))
 static volatile LIMINE_BASE_REVISION(4);
@@ -26,11 +29,10 @@ void kmain() {
 		hcf();
 
 	struct limine_framebuffer *fb = framebuffer_request.response->framebuffers[0];
-	uint32_t *ptr = fb->address;
 
-	for (uint64_t y = 0; y < fb->height; y++)
-		for (uint64_t x = 0; x < fb->width; x++)
-			ptr[y * (fb->pitch / 4) + x] = 0xFF69B4;
+	dump_cr(fb);
+	fb_printf(fb, "\n", NULL);
+	dump_fb(fb);
 
 	hcf();
 }
