@@ -69,7 +69,6 @@ cflags += [
         '-m64',
         '-march=x86-64',
         '-mabi=sysv',
-        '-mgeneral-regs-only',
         '-mno-red-zone',
         '-mcmodel=kernel',
     ]
