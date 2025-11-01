@@ -10,30 +10,52 @@
 #include "std/string.h"
 #include "std/misc.h"
 #include "math/math.h"
-#include "kernel/psf/anniki16x16.h"
+#include "kernel/boot/limine.h"
+#include "kernel/psf/cp850_8x16.h"
 #include "kernel/std/mem.h"
-
-typedef struct framebuffer {
-    uint32_t width;
-    uint32_t height;
-    uint32_t bpp;
-    uint32_t pitch;
-    uint32_t *addr;
-} framebuffer;
 
 static size_t _char_row = 0;
 static size_t _char_column = 0;
 
+typedef struct limine_framebuffer framebuffer;
+
 static inline void fb_put_pixel(framebuffer *fb, uint32_t x, uint32_t y, uint32_t color) {
     if (x >= fb->width || y >= fb->height) return;
-    
-    fb->addr[y * (fb->pitch / sizeof(uint32_t)) + x] = color;
+
+    switch (fb->bpp) {
+        case 32:
+            ((uint32_t *)fb->address)[y * (fb->pitch / sizeof(uint32_t)) + x] = color;
+            break;
+        case 24:
+            uint8_t *pixel = (uint8_t *)fb->address + y * fb->pitch + x * 3;
+            pixel[0] = color & 0xFF;
+            pixel[1] = (color >> 8) & 0xFF;
+            pixel[2] = (color >> 16) & 0xFF;
+            break;
+        case 16:
+            // TODO: Convert 32-bit color to RGB565
+            ((uint16_t *)fb->address)[y * (fb->pitch / sizeof(uint16_t)) + x] = (uint16_t) color;
+            break;
+        default:
+            break;
+    }
 }
 
 static inline uint32_t fb_get_pixel(framebuffer *fb, uint32_t x, uint32_t y) {
     if (x >= fb->width || y >= fb->height) return 0;
-    
-    return fb->addr[y * (fb->pitch / sizeof(uint32_t)) + x];
+
+    switch (fb->bpp) {
+        case 32:
+            return ((uint32_t *)fb->address)[y * (fb->pitch / sizeof(uint32_t)) + x];
+        case 24: {
+            uint8_t *pixel = (uint8_t *)fb->address + y * fb->pitch + x * 3;
+            return pixel[0] | (pixel[1] << 8) | (pixel[2] << 16);
+        }
+        case 16:
+            return ((uint16_t *)fb->address)[y * (fb->pitch / sizeof(uint16_t)) + x];
+        default:
+            return 0;
+    }
 }
 
 static inline uint8_t *get_glyph(unsigned char c) {
@@ -95,6 +117,16 @@ void _fb_raw_putchar(framebuffer *fb, uint32_t x, uint32_t y, unsigned char c, u
         }
     }
 
+#elif GLYPH_WIDTH == 8 && GLYPH_HEIGHT == 16
+    for (int row = 0; row < GLYPH_HEIGHT; row++) {
+        uint8_t bits = glyph[row];
+
+        for (int col = 0; col < 8; col++) {
+            if (bits & (1 << (7 - col))) {
+                fb_put_pixel(fb, x + col, y + row, color);
+            }
+        }
+    }
 #else
     #error "Unsupported dimensions for such PSF font"
 #endif
