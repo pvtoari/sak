@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "io/mmio.h"
+#include "io/ioports.h"
 
 /*
 	PS/2 Serial ports
