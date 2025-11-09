@@ -131,4 +131,6 @@ typedef struct FADT_t
     GenericAddressStructure_t X_GPE1Block;
 } FADT_t;
 
+FADT_t *find_FACP(void *RootSDT);
+
 #endif // ACPI_H

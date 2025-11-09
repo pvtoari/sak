@@ -12,7 +12,7 @@
 #error "No printing function provided"
 #endif
 
-void dump_cr(framebuffer *fb) {
+static inline void dump_cr(framebuffer *fb) {
     uint64_t cr0 = read_cr0();
     uint64_t cr2 = read_cr2();
     uint64_t cr3 = read_cr3();
@@ -71,7 +71,7 @@ void dump_cr(framebuffer *fb) {
     printbit(fb, cr4, CR4_PKS);
 }
 
-void dump_fb(framebuffer *fb) {
+static inline void dump_fb(framebuffer *fb) {
     printf(fb, "framebuffer info:\n", NULL);
     printf(fb, "fb->address: 0x%x\n", fb->address);
     printfield(fb, fb->width);

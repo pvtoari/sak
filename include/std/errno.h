@@ -24,15 +24,10 @@
 #ifndef __ERRNO_H
 #define __ERRNO_H
 
-// not sure if this is needed rn
-//#include <compiler.h>
-
-//__BEGIN_CDECLS
-
-// This is a workaround.should be like this:
-// extern int *__geterrno(void);
-static int _errno;
-int *__geterrno(void) { return &_errno; }
+extern int _errno;
+static inline int *__geterrno(void) {
+    return &_errno; 
+}
 
 #define errno (*__geterrno())
 #define	EPERM 1		/* Not super-user */
@@ -159,6 +154,5 @@ int *__geterrno(void) { return &_errno; }
 #define EOVERFLOW 139	/* Value too large for defined data type */
 #define EWOULDBLOCK EAGAIN	/* Operation would block */
 #define __ELASTERROR 2000	/* Users can add values starting here */
-//__END_CDECLS
 
 #endif // ERRNO_H

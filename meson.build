@@ -36,7 +36,13 @@ endif
 
 inc = include_directories('include')
 src = files(
-	'src/kernel.c'
+    'src/kernel.c',
+    'src/io/acpi.c', 'src/io/ps2.c',
+    'src/math/geometry.c', 'src/math/math.c', 'src/math/costable_0_001.c',
+    'src/std/misc.c', 'src/std/string.c', 'src/std/errno.c',
+    'src/kernel/graphics/framebuffer.c',
+    'src/kernel/psf/cp850_8x16.c',
+    'src/kernel/std/mem.c',
 )
 
 dependencies = [
